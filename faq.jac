@@ -1,14 +1,53 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2639
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+node faq_root;
+node faq_state {
+    has question;
+    has answer;
+}
 
-\f0\fs24 \cf0 node faq_root;\
-node faq_state \{\
-    has question;\
-    has answer;\
-\}\
-\
+// Static graph definition
+graph faq {
+    has anchor faq_root;
+    spawn {
+        // Spawning the nodes
+        faq_root = spawn node::faq_root;
+        faq_answer_1 = spawn node::faq_state(
+            question="How do I configure my order?",
+            answer="To configure your order, log into your Tesla account."
+        );
+        faq_answer_2 = spawn node::faq_state(
+            question="How do I order a tesla",
+            answer="Visit our design studio to place your order."
+        );
+        faq_answer_3 = spawn node::faq_state(
+            question="Can I request a test drive",
+            answer="Yes. You must be a minimum of 25 years of age."
+        );
+
+        // Connecting the nodes together
+        faq_root ++> faq_answer_1;
+        faq_root ++> faq_answer_2;
+        faq_root ++> faq_answer_3;
+    }
+}
+
+
+walker init {
+    root {
+        spawn here ++> graph::faq;
+        spawn here walker::ask;
+    }
+}
+
+walker ask {
+    has question;
+    root {
+        question = std.input("AMA > ");
+        take --> node::faq_root;
+    }
+    faq_root {
+        take --> node::faq_state(question==question);
+    }
+    faq_state {:
+        std.out(here.answer);
+    }
 }
